@@ -1,7 +1,7 @@
 ---
 title: Early Data Option for CoAP
 abbrev: CoAP Early Data
-docname: draft-tschofenig-core-early-data-option
+docname: draft-tschofenig-core-early-data-option-latest
 category: std
 consensus: true
 submissiontype: IETF
