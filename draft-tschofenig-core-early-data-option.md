@@ -119,7 +119,7 @@ the CoAP Response Code registry.
 | Code | Description | Reference |
 | ---- | ----------- | --------- |
 | 4.25 | Too Early   | {{&SELF}} |
-{: tbl-too-early-code align="left"
+{: #tbl-too-early-code align="left"
    title="Too Early Response Code"}
 
 --- back
