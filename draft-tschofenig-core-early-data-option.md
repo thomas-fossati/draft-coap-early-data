@@ -44,28 +44,38 @@ entity:
 
 --- abstract
 
-TODO
+This document defines mechanisms that allow clients to communicate with servers
+about CoAP requests that are sent in early data.  Techniques are described that
+use these mechanisms to mitigate the risk of replay.
 
 --- middle
 
 # Introduction
 
-TODO
+TLS and DTLS 1.3 provide a "zero round-trip time" (0-RTT) feature, the
+mechanics of which are described in {{Section 2.3 of TLS13}}.
+
+This feature provides a significant performance enhancement by enabling a
+client to send data to a server whom it has already spoken to in the first TLS
+handshake flight.  However, TLS does not provide inherent replay protections
+for 0-RTT data, therefore the application running atop the TLS session has to
+take care of that.  Specifically, {{Appendix E.5 of TLS13}} establishes that:
+
+> Application protocols MUST NOT use 0-RTT data without a profile that
+> defines its use.  That profile needs to identify which messages or
+> interactions are safe to use with 0-RTT and how to handle the
+> situation when the server rejects 0-RTT and falls back to 1-RTT.
+
+This document defines the application profile for CoAP {{CoAP}} to allow
+clients and servers to exchange CoAP requests that are sent in early data.  It
+also describes how to mitigate the risk of replay.  The design is inspired by
+{{!RFC8470}}.
 
 ## Requirements Language
 
 {::boilerplate bcp14-tagged}
 
 # 0-RTT Data
-
-When clients and servers share a PSK, TLS/DTLS 1.3 allows clients to send data
-on the first flight ("early data"). This features reduces communication setup
-latency but requires application layer protocols to define its use with the
-0-RTT data functionality.
-
-For HTTP this functionality is described in {{!RFC8470}}. This document
-specifies the application profile for CoAP, which follows the design of
-{{!RFC8470}}.
 
 For a given request, the level of tolerance to replay risk is specific to the
 resource it operates upon (and therefore only known to the origin server).  In
@@ -97,6 +107,10 @@ https://github.com/thomas-fossati/draft-coap-early-data/issues
 
 TODO
 
+Background:
+* {{Appendix E.5 of TLS13}}
+* {{Section 8 of TLS13}}
+* {{Section 6 of RFC8470}}
 
 # IANA Considerations
 
