@@ -1,0 +1,221 @@
+
+
+
+
+CoRE Working Group                                         H. Tschofenig
+Internet-Draft                                                T. Fossati
+Intended status: Standards Track                             Arm Limited
+Expires: 14 November 2022                                    13 May 2022
+
+
+                       Early Data Option for CoAP
+             draft-tschofenig-core-early-data-option-latest
+
+Abstract
+
+   This document defines mechanisms that allow clients to communicate
+   with servers about CoAP requests that are sent in early data.
+   Techniques are described that use these mechanisms to mitigate the
+   risk of replay.
+
+Discussion Venues
+
+   This note is to be removed before publishing as an RFC.
+
+   Discussion of this document takes place on the Constrained RESTful
+   Environments Working Group mailing list (core@ietf.org), which is
+   archived at https://mailarchive.ietf.org/arch/browse/core/.
+
+   Source for this draft and an issue tracker can be found at
+   https://github.com/thomas-fossati/draft-coap-early-data.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 14 November 2022.
+
+Copyright Notice
+
+   Copyright (c) 2022 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Introduction
+     1.1.  Requirements Language
+   2.  0-RTT Data
+   3.  Open Issues
+   4.  Security Considerations
+   5.  IANA Considerations
+     5.1.  New Option
+     5.2.  New Response Code
+   6.  Normative References
+   Acknowledgments
+   Authors' Addresses
+
+1.  Introduction
+
+   TLS and DTLS 1.3 provide a "zero round-trip time" (0-RTT) feature,
+   the mechanics of which are described in Section 2.3 of [TLS13].
+
+   This feature provides a significant performance enhancement by
+   enabling a client to send data to a server whom it has already spoken
+   to in the first TLS handshake flight.  However, TLS does not provide
+   inherent replay protections for 0-RTT data, therefore the application
+   running atop the TLS session has to take care of that.  Specifically,
+   Appendix E.5 of [TLS13] establishes that:
+
+      Application protocols MUST NOT use 0-RTT data without a profile
+      that defines its use.  That profile needs to identify which
+      messages or interactions are safe to use with 0-RTT and how to
+      handle the situation when the server rejects 0-RTT and falls back
+      to 1-RTT.
+
+   This document defines the application profile for CoAP [CoAP] to
+   allow clients and servers to exchange CoAP requests that are sent in
+   early data.  It also describes how to mitigate the risk of replay.
+   The design is inspired by [RFC8470].
+
+1.1.  Requirements Language
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+2.  0-RTT Data
+
+   For a given request, the level of tolerance to replay risk is
+   specific to the resource it operates upon (and therefore only known
+   to the origin server).  In general, if processing a request does not
+   have state-changing side effects, the consequences of replay are not
+   significant.  The server can choose whether it will process early
+   data before the TLS handshake completes.
+
+   It is RECOMMENDED that origin servers allow resources to explicitly
+   configure whether early data is appropriate in requests.
+
+   This document specifies the Early-Data option, which indicates that
+   the request has been conveyed in early data and that a client
+   understands the 4.25 (Too Early) status code.  The semantic follows
+   [RFC8470].
+
+   +=====+===+===+===+===+============+========+========+=========+===+
+   | No. | C | U | N | R | Name       | Format | Length | Default | E |
+   +=====+===+===+===+===+============+========+========+=========+===+
+   | TBD | x |   |   |   | Early-Data | empty  | 0      | (none)  | x |
+   +-----+---+---+---+---+------------+--------+--------+---------+---+
+
+                        Table 1: Early-Data Option
+
+
+   // Note that 4.25 is just the suggested CoAP response code, which has
+   // not been registered yet.
+
+3.  Open Issues
+
+   A list of open issues can be found at https://github.com/thomas-
+   fossati/draft-coap-early-data/issues
+
+4.  Security Considerations
+
+   TODO
+
+   Background: * Appendix E.5 of [TLS13] * Section 8 of [TLS13] *
+   Section 6 of [RFC8470]
+
+5.  IANA Considerations
+
+5.1.  New Option
+
+   IANA is asked to add the Option defined in Table 2 to the CoAP Option
+   Numbers registry.
+
+   +========+============+===========+
+   | Number | Name       | Reference |
+   +========+============+===========+
+   | TBD    | Early-Data | RFCthis   |
+   +--------+------------+-----------+
+
+        Table 2: Early-Data Option
+
+5.2.  New Response Code
+
+   IANA is asked to add the Response Code defined in Table 3 to the CoAP
+   Response Code registry.
+
+   +======+=============+===========+
+   | Code | Description | Reference |
+   +======+=============+===========+
+   | 4.25 | Too Early   | RFCthis   |
+   +------+-------------+-----------+
+
+    Table 3: Too Early Response Code
+
+6.  Normative References
+
+   [CoAP]     Shelby, Z., Hartke, K., and C. Bormann, "The Constrained
+              Application Protocol (CoAP)", RFC 7252,
+              DOI 10.17487/RFC7252, June 2014,
+              <https://www.rfc-editor.org/rfc/rfc7252>.
+
+   [DTLS13]   Rescorla, E., Tschofenig, H., and N. Modadugu, "The
+              Datagram Transport Layer Security (DTLS) Protocol Version
+              1.3", RFC 9147, DOI 10.17487/RFC9147, April 2022,
+              <https://www.rfc-editor.org/rfc/rfc9147>.
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/rfc/rfc2119>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+   [RFC8470]  Thomson, M., Nottingham, M., and W. Tarreau, "Using Early
+              Data in HTTP", RFC 8470, DOI 10.17487/RFC8470, September
+              2018, <https://www.rfc-editor.org/rfc/rfc8470>.
+
+   [TLS13]    Rescorla, E., "The Transport Layer Security (TLS) Protocol
+              Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
+              <https://www.rfc-editor.org/rfc/rfc8446>.
+
+Acknowledgments
+
+   TODO
+
+Authors' Addresses
+
+   Hannes Tschofenig
+   Arm Limited
+
+   Email: Hannes.Tschofenig@gmx.net
+
+
+   Thomas Fossati
+   Arm Limited
+
+   Email: Thomas.Fossati@arm.com
