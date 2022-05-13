@@ -8,7 +8,9 @@
 <meta content="Hannes Tschofenig" name="author">
 <meta content="Thomas Fossati" name="author">
 <meta content="
-       TODO 
+       This document defines mechanisms that allow clients to communicate with servers
+about CoAP requests that are sent in early data.  Techniques are described that
+use these mechanisms to mitigate the risk of replay. 
     " name="description">
 <meta content="xml2rfc 3.12.0" name="generator">
 <meta content="CoAP, Option, Early Data, TLS 1.3" name="keyword">
@@ -1017,7 +1019,7 @@ svg [stroke="fill"], svg [fill^="#fff"] {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Tschofenig &amp; Fossati</td>
-<td class="center">Expires 13 November 2022</td>
+<td class="center">Expires 14 November 2022</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1030,12 +1032,12 @@ svg [stroke="fill"], svg [fill^="#fff"] {
 <dd class="internet-draft">draft-tschofenig-core-early-data-option-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2022-05-12" class="published">12 May 2022</time>
+<time datetime="2022-05-13" class="published">13 May 2022</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2022-11-13">13 November 2022</time></dd>
+<dd class="expires"><time datetime="2022-11-14">14 November 2022</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1052,7 +1054,9 @@ svg [stroke="fill"], svg [fill^="#fff"] {
 <h1 id="title">Early Data Option for CoAP</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">TODO<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document defines mechanisms that allow clients to communicate with servers
+about CoAP requests that are sent in early data.  Techniques are described that
+use these mechanisms to mitigate the risk of replay.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-discussion-venues">
@@ -1084,7 +1088,7 @@ svg [stroke="fill"], svg [fill^="#fff"] {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 13 November 2022.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 14 November 2022.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1159,7 +1163,25 @@ svg [stroke="fill"], svg [fill^="#fff"] {
       <h2 id="name-introduction">
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-1-1">TODO<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-1">TLS and DTLS 1.3 provide a "zero round-trip time" (0-RTT) feature, the
+mechanics of which are described in <span><a href="https://rfc-editor.org/rfc/rfc8446#section-2.3" class="relref">Section 2.3</a> of [<a href="#TLS13" class="xref">TLS13</a>]</span>.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">This feature provides a significant performance enhancement by enabling a
+client to send data to a server whom it has already spoken to in the first TLS
+handshake flight.  However, TLS does not provide inherent replay protections
+for 0-RTT data, therefore the application running atop the TLS session has to
+take care of that.  Specifically, <span><a href="https://rfc-editor.org/rfc/rfc8446#appendix-E.5" class="relref">Appendix E.5</a> of [<a href="#TLS13" class="xref">TLS13</a>]</span> establishes that:<a href="#section-1-2" class="pilcrow">¶</a></p>
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="section-1-3.1">
+          <p id="section-1-3.1.1">Application protocols <span class="bcp14">MUST NOT</span> use 0-RTT data without a profile that
+defines its use.  That profile needs to identify which messages or
+interactions are safe to use with 0-RTT and how to handle the
+situation when the server rejects 0-RTT and falls back to 1-RTT.<a href="#section-1-3.1.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-1-4">This document defines the application profile for CoAP <span>[<a href="#CoAP" class="xref">CoAP</a>]</span> to allow
+clients and servers to exchange CoAP requests that are sent in early data.  It
+also describes how to mitigate the risk of replay.  The design is inspired by
+<span>[<a href="#RFC8470" class="xref">RFC8470</a>]</span>.<a href="#section-1-4" class="pilcrow">¶</a></p>
 <div id="requirements-language">
 <section id="section-1.1">
         <h3 id="name-requirements-language">
@@ -1178,23 +1200,16 @@ appear in all capitals, as shown here.<a href="#section-1.1-1" class="pilcrow">�
       <h2 id="name-0-rtt-data">
 <a href="#section-2" class="section-number selfRef">2. </a><a href="#name-0-rtt-data" class="section-name selfRef">0-RTT Data</a>
       </h2>
-<p id="section-2-1">When clients and servers share a PSK, TLS/DTLS 1.3 allows clients to send data
-on the first flight ("early data"). This features reduces communication setup
-latency but requires application layer protocols to define its use with the
-0-RTT data functionality.<a href="#section-2-1" class="pilcrow">¶</a></p>
-<p id="section-2-2">For HTTP this functionality is described in <span>[<a href="#RFC8470" class="xref">RFC8470</a>]</span>. This document
-specifies the application profile for CoAP, which follows the design of
-<span>[<a href="#RFC8470" class="xref">RFC8470</a>]</span>.<a href="#section-2-2" class="pilcrow">¶</a></p>
-<p id="section-2-3">For a given request, the level of tolerance to replay risk is specific to the
+<p id="section-2-1">For a given request, the level of tolerance to replay risk is specific to the
 resource it operates upon (and therefore only known to the origin server).  In
 general, if processing a request does not have state-changing side effects,
 the consequences of replay are not significant. The server can choose whether
-it will process early data before the TLS handshake completes.<a href="#section-2-3" class="pilcrow">¶</a></p>
-<p id="section-2-4">It is <span class="bcp14">RECOMMENDED</span> that origin servers allow resources to explicitly configure
-whether early data is appropriate in requests.<a href="#section-2-4" class="pilcrow">¶</a></p>
-<p id="section-2-5">This document specifies the Early-Data option, which indicates that the
+it will process early data before the TLS handshake completes.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">It is <span class="bcp14">RECOMMENDED</span> that origin servers allow resources to explicitly configure
+whether early data is appropriate in requests.<a href="#section-2-2" class="pilcrow">¶</a></p>
+<p id="section-2-3">This document specifies the Early-Data option, which indicates that the
 request has been conveyed in early data and that a client understands the 4.25
-(Too Early) status code. The semantic follows <span>[<a href="#RFC8470" class="xref">RFC8470</a>]</span>.<a href="#section-2-5" class="pilcrow">¶</a></p>
+(Too Early) status code. The semantic follows <span>[<a href="#RFC8470" class="xref">RFC8470</a>]</span>.<a href="#section-2-3" class="pilcrow">¶</a></p>
 <span id="name-early-data-option"></span><div id="fig-early-data">
 <table class="center" id="table-1">
         <caption>
@@ -1231,8 +1246,8 @@ request has been conveyed in early data and that a client understands the 4.25
         </tbody>
       </table>
 </div>
-<p id="section-2-7"><span class="cref">Note that 4.25 is just the suggested CoAP response code, which has not
-been registered yet.</span><a href="#section-2-7" class="pilcrow">¶</a></p>
+<p id="section-2-5"><span class="cref">Note that 4.25 is just the suggested CoAP response code, which has not
+been registered yet.</span><a href="#section-2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="open-issues">
@@ -1250,6 +1265,10 @@ https://github.com/thomas-fossati/draft-coap-early-data/issues<a href="#section-
 <a href="#section-4" class="section-number selfRef">4. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
 <p id="section-4-1">TODO<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-2">Background:
+* <span><a href="https://rfc-editor.org/rfc/rfc8446#appendix-E.5" class="relref">Appendix E.5</a> of [<a href="#TLS13" class="xref">TLS13</a>]</span>
+* <span><a href="https://rfc-editor.org/rfc/rfc8446#section-8" class="relref">Section 8</a> of [<a href="#TLS13" class="xref">TLS13</a>]</span>
+* <span><a href="https://rfc-editor.org/rfc/rfc8470#section-6" class="relref">Section 6</a> of [<a href="#RFC8470" class="xref">RFC8470</a>]</span><a href="#section-4-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="iana-considerations">
