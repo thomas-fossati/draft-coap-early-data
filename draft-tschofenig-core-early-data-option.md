@@ -105,9 +105,8 @@ https://github.com/thomas-fossati/draft-coap-early-data/issues
 
 # Security Considerations
 
-TODO
-
 Background:
+
 * {{Appendix E.5 of TLS13}}
 * {{Section 8 of TLS13}}
 * {{Section 6 of RFC8470}}
@@ -135,11 +134,3 @@ the CoAP Response Code registry.
 | 4.25 | Too Early   | {{&SELF}} |
 {: #tbl-too-early-code align="left"
    title="Too Early Response Code"}
-
---- back
-
-# Acknowledgments
-{:unnumbered}
-
-TODO
-
