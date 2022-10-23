@@ -12,26 +12,26 @@
 about CoAP requests that are sent in early data.  Techniques are described that
 use these mechanisms to mitigate the risk of replay. 
     " name="description">
-<meta content="xml2rfc 3.12.0" name="generator">
+<meta content="xml2rfc 3.15.1" name="generator">
 <meta content="CoAP, Option, Early Data, TLS 1.3" name="keyword">
 <meta content="draft-tschofenig-core-early-data-option-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.12.0
-    Python 3.8.9
+  xml2rfc 3.15.1
+    Python 3.10.8
     appdirs 1.4.4
     ConfigArgParse 1.5.3
-    google-i18n-address 2.5.0
+    google-i18n-address 2.5.2
     html5lib 1.1
     intervaltree 3.1.0
-    Jinja2 2.11.3
+    Jinja2 3.1.2
     kitchen 1.2.6
-    lxml 4.6.4
-    pycountry 20.7.3
-    pyflakes 2.4.0
+    lxml 4.9.1
+    MarkupSafe 2.1.1
+    pycountry 22.3.5
     PyYAML 6.0
-    requests 2.26.0
-    setuptools 49.2.1
-    six 1.15.0
+    requests 2.28.1
+    setuptools 65.5.0
+    six 1.16.0
 -->
 <link href="draft-tschofenig-core-early-data-option.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -155,6 +155,14 @@ use these mechanisms to mitigate the risk of replay.
   font-weight: 700;
   font-display: swap;
   src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
@@ -338,7 +346,7 @@ ol, ul {
   padding: 0;
   margin: 0 0 0.5em 2em;
 }
-ol ol, ul ul, ol ul, ul ol {
+:is(ol, ul) :is(ol, ul) {
   margin-left: 1em;
 }
 li {
@@ -353,31 +361,44 @@ ul.empty, .ulEmpty {
 ul.empty li, .ulEmpty li {
   margin-top: 0.5em;
 }
-ul.compact, .ulCompact,
-ol.compact, .olCompact {
+:is(ul, ol).compact, .ulCompact, .olCompact {
   line-height: 100%;
   margin: 0 0 0 2em;
 }
 
 /* definition lists */
 dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
 }
 dl > dt {
   float: left;
   margin-right: 1em;
+  min-width: 20ch;
+}
+dl.dlNewline > dt {
+  float: none;
 }
 dl > dd {
   margin-bottom: .8em;
-  min-height: 1.3em;
+  margin-left: var(--indent) !important; /* stupid element overrides */
+  min-height: 2ex;
 }
-dl.compact > dd, .dlCompact > dd {
-  margin-bottom: 0em;
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+}
+:is(dl.compact, .dlCompact) > dd > :is(:first-child, .break:first-child + *) {
+  margin-top: 0;
+}
+:is(dl.compact, .dlCompact) > dd > :is(:last-child) {
+  margin-bottom: 0;
 }
 dl > dd > dl {
   margin-top: 0.5em;
-  margin-bottom: 0em;
+  margin-bottom: 0;
 }
-dd.break {
+dl .break {
   display: none;
 }
 
@@ -412,6 +433,9 @@ tt, code {
      remove leading to avoid altering the final height of lines */
   line-height: 0;
 }
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
+}
 pre {
   border: 1px solid var(--line-color);
   font-size: 13.5px;
@@ -436,6 +460,19 @@ figcaption, caption {
   text-align: left;
 }
 @media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) p {
+    margin: -2px 0;
+    max-height: 0;
+    transition: max-height 2s ease, margin 0.5s ease 0.5s;
+    overflow: hidden;
+  }
+  :is(#status-of-memo, #copyright):hover p,
+  :is(#status-of-memo, #copyright) h2:target ~ p {
+    margin: 0.5em 0;
+    max-height: 500px;
+    overflow: auto;
+  }
   pre, svg {
     display: inline-block;
     overflow-x: auto;
@@ -451,7 +488,7 @@ figcaption, caption {
     display: block;
     width: calc(100% - 25px);
   }
-  pre + .pilcrow, svg + .pilcrow {
+  :is(pre, svg) + .pilcrow {
     display: inline-block;
     vertical-align: text-bottom;
     padding-bottom: 8px;
@@ -500,17 +537,11 @@ th, td {
 th {
   background-color: var(--line-color);
 }
-tr:nth-child(2n) > td {
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
   background-color: var(--background-color);
 }
-tr:nth-child(2n+1) > td {
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
   background-color: var(--highlight-color);
-}
-thead+tbody > tr:nth-child(2n) > td {
-  background-color: var(--highlight-color);
-}
-thead+tbody > tr:nth-child(2n+1) > td {
-  background-color: var(--background-color);
 }
 table caption {
   margin: 0;
@@ -550,8 +581,9 @@ hr {
 }
 .bcp14 {
   font-variant: small-caps;
+  font-weight: 600;
+  font-size: 14.5px;
 }
-
 .role {
   font-variant: all-small-caps;
 }
@@ -561,17 +593,18 @@ hr {
   margin: 0;
   font-size: var(--small-font-size);
   line-height: 18px;
-  --identifier-width: 8em;
+  --identifier-width: 15ch;
 }
 #identifiers dt {
   width: var(--identifier-width);
-  margin: 0;
+  min-width: var(--identifier-width);
   clear: left;
   float: left;
   text-align: right;
 }
 #identifiers dd {
-  margin: 0 0 0 calc(1em + var(--identifier-width));
+  margin: 0;
+  margin-left: calc(1em + var(--identifier-width)) !important;
   min-width: 5em;
 }
 #identifiers .authors .author {
@@ -621,8 +654,13 @@ hr {
   font-weight: bold;
   min-width: 7em;
 }
+.references dt:target::before {
+  content: "⇒";
+  width: 15px;
+  margin: 0 10px 0 -25px;
+}
 .references dd {
-  margin-left: 8em;
+  margin-left: 8em !important;
   overflow: auto;
 }
 
@@ -790,7 +828,7 @@ hr.addr {
     margin: 0 0 0 4px;
     font-size: var(--small-font-size);
   }
-  #toc ul p, #toc ul li {
+  #toc ul :is(p, li) {
     margin: 2px 0;
     line-height: 22px;
   }
@@ -889,24 +927,14 @@ a.toplink {
   margin: 8px 0.5em 0;
 }
 
-/* Fix the dl styling to match the RFC 7992 attributes */
-dl > dt,
-dl.dlParallel > dt {
-  float: left;
-  margin-right: 1em;
-}
-dl.dlNewline > dt {
-  float: none;
-}
-
 /* Provide styling for table cell text alignment */
-table .text-left, table .text-left {
+table .text-left {
   text-align: left;
 }
-table .text-center, table .text-center {
+table .text-center {
   text-align: center;
 }
-table .text-right, table .text-right {
+table .text-right {
   text-align: right;
 }
 
@@ -973,12 +1001,6 @@ address div.right {
   }
 
 }
-/* Tweak the bcp14 keyword presentation */
-.bcp14 {
-  font-variant: small-caps;
-  font-weight: bold;
-  font-size: 0.9em;
-}
 
 /* Dark mode. */
 @media (prefers-color-scheme: dark) {
@@ -993,33 +1015,34 @@ address div.right {
   --pilcrow-strong: #666;
   scrollbar-color: #777 #333;
 }
-/* Trick: a prefix match works because only black and white are allowed */
-svg [stroke="black"], svg [stroke^="#000"] {
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg :is([stroke="black"], [stroke^="#000"]) {
   stroke: var(--text-color);
 }
-svg [stroke="white"], svg [stroke^="#fff"] {
+svg :is([stroke="white"], [stroke^="#fff"]) {
   stroke: var(--background-color);
 }
-svg [fill="black"], svg [fill^="#000"], svg :not([fill]) {
+svg :is([fill="black"], [fill^="#000"], :not([fill])) {
   fill: var(--text-color);
 }
-svg [stroke="fill"], svg [fill^="#fff"] {
+svg :is([stroke="fill"], [fill^="#fff"]) {
   fill: var(--background-color);
-}
 }
 </style>
 
 </head>
-<body>
+<body class="xml2rfc">
 <table class="ears">
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">CoAP Early Data</td>
-<td class="right">May 2022</td>
+<td class="right">October 2022</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Tschofenig &amp; Fossati</td>
-<td class="center">Expires 14 November 2022</td>
+<td class="center">Expires 26 April 2023</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1032,12 +1055,12 @@ svg [stroke="fill"], svg [fill^="#fff"] {
 <dd class="internet-draft">draft-tschofenig-core-early-data-option-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2022-05-13" class="published">13 May 2022</time>
+<time datetime="2022-10-23" class="published">23 October 2022</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2022-11-14">14 November 2022</time></dd>
+<dd class="expires"><time datetime="2023-04-26">26 April 2023</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1088,7 +1111,7 @@ use these mechanisms to mitigate the risk of replay.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 14 November 2022.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 26 April 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1118,41 +1141,38 @@ use these mechanisms to mitigate the risk of replay.<a href="#section-abstract-1
         </h2>
 <nav class="toc"><ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
-            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="xref">1</a>.  <a href="#name-introduction" class="xref">Introduction</a></p>
+            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.1">
-                <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="xref">1.1</a>.  <a href="#name-requirements-language" class="xref">Requirements Language</a></p>
+                <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="auto internal xref">1.1</a>.  <a href="#name-requirements-language" class="internal xref">Requirements Language</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
-            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="xref">2</a>.  <a href="#name-0-rtt-data" class="xref">0-RTT Data</a></p>
+            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-0-rtt-data" class="internal xref">0-RTT Data</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1"><a href="#section-3" class="xref">3</a>.  <a href="#name-open-issues" class="xref">Open Issues</a></p>
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-open-issues" class="internal xref">Open Issues</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="xref">4</a>.  <a href="#name-security-considerations" class="xref">Security Considerations</a></p>
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="xref">5</a>.  <a href="#name-iana-considerations" class="xref">IANA Considerations</a></p>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
-                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="xref">5.1</a>.  <a href="#name-new-option" class="xref">New Option</a></p>
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-new-option" class="internal xref">New Option</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
-                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="xref">5.2</a>.  <a href="#name-new-response-code" class="xref">New Response Code</a></p>
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-new-response-code" class="internal xref">New Response Code</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#section-6" class="xref">6</a>.  <a href="#name-normative-references" class="xref">Normative References</a></p>
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
-            <p id="section-toc.1-1.7.1"><a href="#appendix-A" class="xref"></a><a href="#name-acknowledgments" class="xref">Acknowledgments</a></p>
-</li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
-            <p id="section-toc.1-1.8.1"><a href="#appendix-B" class="xref"></a><a href="#name-authors-addresses" class="xref">Authors' Addresses</a></p>
+            <p id="section-toc.1-1.7.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
 </li>
         </ul>
 </nav>
@@ -1164,12 +1184,12 @@ use these mechanisms to mitigate the risk of replay.<a href="#section-abstract-1
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
 <p id="section-1-1">TLS and DTLS 1.3 provide a "zero round-trip time" (0-RTT) feature, the
-mechanics of which are described in <span><a href="https://rfc-editor.org/rfc/rfc8446#section-2.3" class="relref">Section 2.3</a> of [<a href="#TLS13" class="xref">TLS13</a>]</span>.<a href="#section-1-1" class="pilcrow">¶</a></p>
+mechanics of which are described in <span><a href="https://rfc-editor.org/rfc/rfc8446#section-2.3" class="relref">Section 2.3</a> of [<a href="#TLS13" class="cite xref">TLS13</a>]</span>.<a href="#section-1-1" class="pilcrow">¶</a></p>
 <p id="section-1-2">This feature provides a significant performance enhancement by enabling a
 client to send data to a server whom it has already spoken to in the first TLS
 handshake flight.  However, TLS does not provide inherent replay protections
 for 0-RTT data, therefore the application running atop the TLS session has to
-take care of that.  Specifically, <span><a href="https://rfc-editor.org/rfc/rfc8446#appendix-E.5" class="relref">Appendix E.5</a> of [<a href="#TLS13" class="xref">TLS13</a>]</span> establishes that:<a href="#section-1-2" class="pilcrow">¶</a></p>
+take care of that.  Specifically, <span><a href="https://rfc-editor.org/rfc/rfc8446#appendix-E.5" class="relref">Appendix E.5</a> of [<a href="#TLS13" class="cite xref">TLS13</a>]</span> establishes that:<a href="#section-1-2" class="pilcrow">¶</a></p>
 <ul class="normal ulEmpty">
 <li class="normal ulEmpty" id="section-1-3.1">
           <p id="section-1-3.1.1">Application protocols <span class="bcp14">MUST NOT</span> use 0-RTT data without a profile that
@@ -1178,10 +1198,10 @@ interactions are safe to use with 0-RTT and how to handle the
 situation when the server rejects 0-RTT and falls back to 1-RTT.<a href="#section-1-3.1.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-1-4">This document defines the application profile for CoAP <span>[<a href="#CoAP" class="xref">CoAP</a>]</span> to allow
+<p id="section-1-4">This document defines the application profile for CoAP <span>[<a href="#CoAP" class="cite xref">CoAP</a>]</span> to allow
 clients and servers to exchange CoAP requests that are sent in early data.  It
 also describes how to mitigate the risk of replay.  The design is inspired by
-<span>[<a href="#RFC8470" class="xref">RFC8470</a>]</span>.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<span>[<a href="#RFC8470" class="cite xref">RFC8470</a>]</span>.<a href="#section-1-4" class="pilcrow">¶</a></p>
 <div id="requirements-language">
 <section id="section-1.1">
         <h3 id="name-requirements-language">
@@ -1189,7 +1209,7 @@ also describes how to mitigate the risk of replay.  The design is inspired by
         </h3>
 <p id="section-1.1-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
 "<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
-described in BCP 14 <span>[<a href="#RFC2119" class="xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="xref">RFC8174</a>]</span> when, and only when, they
+described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
 appear in all capitals, as shown here.<a href="#section-1.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1209,7 +1229,7 @@ it will process early data before the TLS handshake completes.<a href="#section-
 whether early data is appropriate in requests.<a href="#section-2-2" class="pilcrow">¶</a></p>
 <p id="section-2-3">This document specifies the Early-Data option, which indicates that the
 request has been conveyed in early data and that a client understands the 4.25
-(Too Early) status code. The semantic follows <span>[<a href="#RFC8470" class="xref">RFC8470</a>]</span>.<a href="#section-2-3" class="pilcrow">¶</a></p>
+(Too Early) status code. The semantic follows <span>[<a href="#RFC8470" class="cite xref">RFC8470</a>]</span>.<a href="#section-2-3" class="pilcrow">¶</a></p>
 <span id="name-early-data-option"></span><div id="fig-early-data">
 <table class="center" id="table-1">
         <caption>
@@ -1264,11 +1284,18 @@ https://github.com/thomas-fossati/draft-coap-early-data/issues<a href="#section-
       <h2 id="name-security-considerations">
 <a href="#section-4" class="section-number selfRef">4. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
-<p id="section-4-1">TODO<a href="#section-4-1" class="pilcrow">¶</a></p>
-<p id="section-4-2">Background:
-* <span><a href="https://rfc-editor.org/rfc/rfc8446#appendix-E.5" class="relref">Appendix E.5</a> of [<a href="#TLS13" class="xref">TLS13</a>]</span>
-* <span><a href="https://rfc-editor.org/rfc/rfc8446#section-8" class="relref">Section 8</a> of [<a href="#TLS13" class="xref">TLS13</a>]</span>
-* <span><a href="https://rfc-editor.org/rfc/rfc8470#section-6" class="relref">Section 6</a> of [<a href="#RFC8470" class="xref">RFC8470</a>]</span><a href="#section-4-2" class="pilcrow">¶</a></p>
+<p id="section-4-1">Background:<a href="#section-4-1" class="pilcrow">¶</a></p>
+<ul class="compact">
+<li class="compact" id="section-4-2.1">
+          <span><a href="https://rfc-editor.org/rfc/rfc8446#appendix-E.5" class="relref">Appendix E.5</a> of [<a href="#TLS13" class="cite xref">TLS13</a>]</span><a href="#section-4-2.1" class="pilcrow">¶</a>
+</li>
+        <li class="compact" id="section-4-2.2">
+          <span><a href="https://rfc-editor.org/rfc/rfc8446#section-8" class="relref">Section 8</a> of [<a href="#TLS13" class="cite xref">TLS13</a>]</span><a href="#section-4-2.2" class="pilcrow">¶</a>
+</li>
+        <li class="compact" id="section-4-2.3">
+          <span><a href="https://rfc-editor.org/rfc/rfc8470#section-6" class="relref">Section 6</a> of [<a href="#RFC8470" class="cite xref">RFC8470</a>]</span><a href="#section-4-2.3" class="pilcrow">¶</a>
+</li>
+      </ul>
 </section>
 </div>
 <div id="iana-considerations">
@@ -1281,7 +1308,7 @@ https://github.com/thomas-fossati/draft-coap-early-data/issues<a href="#section-
         <h3 id="name-new-option">
 <a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-new-option" class="section-name selfRef">New Option</a>
         </h3>
-<p id="section-5.1-1">IANA is asked to add the Option defined in <a href="#tbl-early-data-option" class="xref">Table 2</a> to the
+<p id="section-5.1-1">IANA is asked to add the Option defined in <a href="#tbl-early-data-option" class="auto internal xref">Table 2</a> to the
 CoAP Option Numbers registry.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
 <span id="name-early-data-option-2"></span><div id="tbl-early-data-option">
 <table class="left" id="table-2">
@@ -1312,7 +1339,7 @@ CoAP Option Numbers registry.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
         <h3 id="name-new-response-code">
 <a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-new-response-code" class="section-name selfRef">New Response Code</a>
         </h3>
-<p id="section-5.2-1">IANA is asked to add the Response Code defined in <a href="#tbl-too-early-code" class="xref">Table 3</a> to
+<p id="section-5.2-1">IANA is asked to add the Response Code defined in <a href="#tbl-too-early-code" class="auto internal xref">Table 3</a> to
 the CoAP Response Code registry.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
 <span id="name-too-early-response-code"></span><div id="tbl-too-early-code">
 <table class="left" id="table-3">
@@ -1371,16 +1398,8 @@ the CoAP Response Code registry.<a href="#section-5.2-1" class="pilcrow">¶</a><
 <dd class="break"></dd>
 </dl>
 </section>
-<div id="acknowledgments">
-<section id="appendix-A">
-      <h2 id="name-acknowledgments">
-<a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
-      </h2>
-<p id="appendix-A-1">TODO<a href="#appendix-A-1" class="pilcrow">¶</a></p>
-</section>
-</div>
 <div id="authors-addresses">
-<section id="appendix-B">
+<section id="appendix-A">
       <h2 id="name-authors-addresses">
 <a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
       </h2>
